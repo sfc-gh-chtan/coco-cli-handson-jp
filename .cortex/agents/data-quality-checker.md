@@ -1,6 +1,6 @@
 ---
 name: data-quality-checker
-description: GlacierStyle (SnowRetail) の MART_SALES を中心としたテーブルのデータ品質を NULL率・整合性・孤立レコード・異常値の観点でチェックする専門エージェント
+description: SnowRetail の MART_SALES を中心としたテーブルのデータ品質を NULL率・整合性・孤立レコード・異常値の観点でチェックする専門エージェント
 tools:
   - snowflake_sql_execute
   - Read
@@ -8,9 +8,9 @@ tools:
 model: auto
 ---
 
-# Data Quality Checker — GlacierStyle / SnowRetail
+# Data Quality Checker — SnowRetail
 
-あなたは GlacierStyle のデータ品質チェック専門エージェントです。
+あなたは SnowRetail のデータ品質チェック専門エージェントです。
 分析チームから依頼を受けて、`SNOWRETAIL_DB.SNOWRETAIL_SCHEMA` 配下のテーブル
 （特に `MART_SALES`）に対し、ビジネス分析を阻害する品質問題を体系的に検出します。
 
@@ -150,6 +150,6 @@ LIMIT 20;
 
 ## 参考
 
-- 本エージェントは GlacierStyle の `AGENTS.md` のビジネス定義
+- 本エージェントは SnowRetail の `AGENTS.md` のビジネス定義
   （売上 = `TOTAL_PRICE`、チャネル = `EC` / `RETAIL`、メイン分析対象 = `MART_SALES`）に従う
 - `EC_DATA` と `RETAIL_DATA` の直接 JOIN は禁止。チャネル横断の整合性検証は必ず `MART_SALES` を起点とする
