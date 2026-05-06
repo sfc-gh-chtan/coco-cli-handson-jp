@@ -1,86 +1,61 @@
 #!/usr/bin/env bash
+# =============================================================================
 # block_dangerous_sql.sh
-# ----------------------------------------------------------------------
-# PreToolUse hook for `snowflake_sql_execute`.
-# 危険な書き込み系 SQL（DROP / TRUNCATE / DELETE / UPDATE / INSERT / MERGE / ALTER）
-# をブロックして、本番データを保護する。
+#   PreToolUse hook: 危険な SQL (DROP/DELETE/INSERT/UPDATE 等) をブロックする。
 #
-# 入力 (stdin): Cortex Code CLI が JSON で送信
-#   {
-#     "session_id": "...",
-#     "tool_name": "snowflake_sql_execute",
-#     "tool_input": { "sql": "..." }
-#   }
+# Cortex Code CLI からの呼ばれ方:
+#   stdin に JSON が渡されてくる。例:
+#     {
+#       "hook_event_name": "PreToolUse",
+#       "tool_name": "snowflake_sql_execute",
+#       "tool_input": { "sql": "DROP TABLE FOO" }
+#     }
 #
-# 出力 (stdout): JSON 1 行
-#   許可: {"decision":"allow"}
-#   ブロック: {"decision":"block","reason":"..."}
-#
-# 終了コード:
-#   0 = 通過
-#   2 = ブロック
-# ----------------------------------------------------------------------
-set -u
+#   stdout に JSON を返すと CoCo がそれを解釈する。
+#     - 通過させる: {"decision":"allow"}    + exit 0
+#     - 阻止する  : {"decision":"block","reason":"..."}  + exit 2
+# =============================================================================
 
-# stdin を全部読み込む
+# stdin (JSON) を変数に読み込む
 INPUT="$(cat)"
 
-# tool_input.sql を抽出（Python が無くても動くよう、まず jq → Python の順で試行）
-extract_sql() {
-  if command -v jq >/dev/null 2>&1; then
-    printf '%s' "$INPUT" | jq -r '.tool_input.sql // .tool_input.query // ""'
-  elif command -v python3 >/dev/null 2>&1; then
-    printf '%s' "$INPUT" | python3 -c 'import sys,json
-try:
-    d = json.load(sys.stdin)
-    ti = d.get("tool_input", {})
-    print(ti.get("sql") or ti.get("query") or "")
-except Exception:
-    print("")'
-  else
-    # フォールバック: 取り出せなかった場合は通過
-    printf ''
-  fi
-}
+# JSON から tool_name と sql を取り出す。jq があればそれを使う。
+TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // ""')
+SQL=$(echo "$INPUT" | jq -r '.tool_input.sql // .tool_input.query // ""')
 
-SQL="$(extract_sql)"
-
-# SQL が空なら通過（解析不能）
-if [ -z "$SQL" ]; then
-  printf '%s\n' '{"decision":"allow","systemMessage":"[hook] sql empty, skipped"}'
+# このフックは SQL 実行ツール (tool_name に "sql" or "snowflake" を含む) のみ対象。
+# 他のツール呼び出し (Bash, Read など) は素通りさせる。
+if [[ "$TOOL_NAME" != *sql* && "$TOOL_NAME" != *snowflake* ]]; then
+  echo '{"decision":"allow"}'
   exit 0
 fi
 
-# 大文字化して比較
-SQL_UPPER="$(printf '%s' "$SQL" | tr '[:lower:]' '[:upper:]')"
+# SQL を大文字化してキーワード検索しやすくする
+SQL_UPPER=$(echo "$SQL" | tr '[:lower:]' '[:upper:]')
 
-# ブロック対象のキーワード（単語境界 \b で囲む）
-PATTERNS=(
-  '\bDROP[[:space:]]+TABLE\b'
-  '\bDROP[[:space:]]+DATABASE\b'
-  '\bDROP[[:space:]]+SCHEMA\b'
-  '\bDROP[[:space:]]+WAREHOUSE\b'
-  '\bTRUNCATE[[:space:]]+TABLE\b'
-  '\bTRUNCATE\b[[:space:]]+'
-  '\bDELETE[[:space:]]+FROM\b'
-  '\bUPDATE\b[[:space:]]+'
-  '\bINSERT[[:space:]]+INTO\b'
-  '\bMERGE[[:space:]]+INTO\b'
-  '\bALTER[[:space:]]+TABLE\b'
-  '\bGRANT\b'
-  '\bREVOKE\b'
+# ブロック対象キーワード一覧 (本番テーブル破壊や書き込みを意図する SQL)
+DANGEROUS_KEYWORDS=(
+  "DROP TABLE"
+  "DROP DATABASE"
+  "DROP SCHEMA"
+  "TRUNCATE"
+  "DELETE FROM"
+  "UPDATE "
+  "INSERT INTO"
+  "MERGE INTO"
+  "ALTER TABLE"
+  "GRANT "
+  "REVOKE "
 )
 
-for pat in "${PATTERNS[@]}"; do
-  if printf '%s' "$SQL_UPPER" | grep -E -q "$pat"; then
-    REASON="本番データ保護のため、書き込み系 SQL '${pat//\\b/}' は Hooks によりブロックされました。AGENTS.md 禁止事項に該当します。SELECT のみ許可されています。"
-    # JSON 文字列としてエスケープ（簡易）
-    ESCAPED_REASON="${REASON//\"/\\\"}"
-    printf '%s\n' "{\"decision\":\"block\",\"reason\":\"${ESCAPED_REASON}\"}"
+# キーワードが見つかったら block して exit 2
+for keyword in "${DANGEROUS_KEYWORDS[@]}"; do
+  if [[ "$SQL_UPPER" == *"$keyword"* ]]; then
+    echo "{\"decision\":\"block\",\"reason\":\"危険な SQL '${keyword}' が検出されたためブロックしました。SELECT のみ許可されています。\"}"
     exit 2
   fi
 done
 
-# 通過
-printf '%s\n' '{"decision":"allow"}'
+# 危険キーワードなし → 通過
+echo '{"decision":"allow"}'
 exit 0

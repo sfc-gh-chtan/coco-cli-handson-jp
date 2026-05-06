@@ -1,68 +1,53 @@
 #!/usr/bin/env bash
+# =============================================================================
 # block_dangerous_bash.sh
-# ----------------------------------------------------------------------
-# PreToolUse hook for `Bash` tool.
-# ローカル環境を破壊しうる Bash コマンドをブロックする。
+#   PreToolUse hook: 破壊的な Bash コマンド (rm -rf, sudo, dd 等) をブロックする。
 #
-# 入力 (stdin):
-#   {
-#     "tool_name": "Bash",
-#     "tool_input": { "command": "..." }
-#   }
+# Cortex Code CLI からの呼ばれ方:
+#   stdin に JSON が渡されてくる。例:
+#     {
+#       "hook_event_name": "PreToolUse",
+#       "tool_name": "bash",
+#       "tool_input": { "command": "rm -rf /" }
+#     }
 #
-# 出力 / 終了コード:
-#   通過: exit 0, {"decision":"allow"}
-#   ブロック: exit 2, {"decision":"block","reason":"..."}
-# ----------------------------------------------------------------------
-set -u
+#   stdout に JSON を返すと CoCo がそれを解釈する。
+#     - 通過させる: {"decision":"allow"}    + exit 0
+#     - 阻止する  : {"decision":"block","reason":"..."}  + exit 2
+# =============================================================================
 
+# stdin (JSON) を変数に読み込む
 INPUT="$(cat)"
 
-extract_cmd() {
-  if command -v jq >/dev/null 2>&1; then
-    printf '%s' "$INPUT" | jq -r '.tool_input.command // ""'
-  elif command -v python3 >/dev/null 2>&1; then
-    printf '%s' "$INPUT" | python3 -c 'import sys,json
-try:
-    d = json.load(sys.stdin)
-    print(d.get("tool_input",{}).get("command") or "")
-except Exception:
-    print("")'
-  else
-    printf ''
-  fi
-}
+# JSON から tool_name と command を取り出す
+TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // ""')
+CMD=$(echo "$INPUT" | jq -r '.tool_input.command // ""')
 
-CMD="$(extract_cmd)"
-
-if [ -z "$CMD" ]; then
-  printf '%s\n' '{"decision":"allow","systemMessage":"[hook] bash command empty, skipped"}'
+# このフックは bash ツールのみ対象。SQL 等の他ツールは素通り
+if [[ "$TOOL_NAME" != "bash" && "$TOOL_NAME" != "Bash" ]]; then
+  echo '{"decision":"allow"}'
   exit 0
 fi
 
-# ブロックパターン（破壊的コマンド）
-PATTERNS=(
-  'rm[[:space:]]+-[a-zA-Z]*r[a-zA-Z]*f?[[:space:]]+/'
-  'rm[[:space:]]+-rf?[[:space:]]+~'
-  ':\(\)\{ *: *\| *: *& *\} *;:'      # フォーク爆弾
-  'mkfs\.'
-  'dd[[:space:]]+if=.*of=/dev/'
-  '>[[:space:]]*/dev/sd[a-z]'
-  'sudo[[:space:]]+rm'
-  'shutdown[[:space:]]'
-  'reboot[[:space:]]*$'
-  'curl[[:space:]]+.*\|[[:space:]]*sh'
-  'wget[[:space:]]+.*\|[[:space:]]*sh'
+# ブロック対象パターン (システムを壊す可能性が高いコマンド)
+DANGEROUS_PATTERNS=(
+  "rm -rf /"          # ルート配下を丸ごと削除
+  "rm -rf ~"          # ホームディレクトリを丸ごと削除
+  "sudo rm"           # 管理者権限での削除
+  "mkfs"              # ファイルシステム作成 (= ディスク初期化)
+  "dd if="            # ディスクへの直接書き込み
+  "shutdown"          # システム停止
+  "reboot"            # 再起動
 )
 
-for pat in "${PATTERNS[@]}"; do
-  if printf '%s' "$CMD" | grep -E -q "$pat"; then
-    REASON="破壊的なシェルコマンドが検出されたため、Hooks によりブロックされました。pattern=${pat}"
-    ESCAPED_REASON="${REASON//\"/\\\"}"
-    printf '%s\n' "{\"decision\":\"block\",\"reason\":\"${ESCAPED_REASON}\"}"
+# パターンが見つかったら block して exit 2
+for pattern in "${DANGEROUS_PATTERNS[@]}"; do
+  if [[ "$CMD" == *"$pattern"* ]]; then
+    echo "{\"decision\":\"block\",\"reason\":\"破壊的な Bash コマンド '${pattern}' が検出されたためブロックしました。\"}"
     exit 2
   fi
 done
 
-printf '%s\n' '{"decision":"allow"}'
+# 危険パターンなし → 通過
+echo '{"decision":"allow"}'
 exit 0

@@ -1,60 +1,45 @@
 #!/usr/bin/env bash
+# =============================================================================
 # log_sql.sh
-# ----------------------------------------------------------------------
-# PostToolUse hook for `snowflake_sql_execute`.
-# 実行された SQL を監査ログとして追記する（決してブロックはしない）。
+#   PostToolUse hook: 実行された SQL を監査ログとして追記する (ブロックはしない)。
 #
-# 入力 (stdin):
-#   {
-#     "tool_name": "snowflake_sql_execute",
-#     "tool_input": { "sql": "...", "description": "..." },
-#     "tool_response": { ... }
-#   }
+# Cortex Code CLI からの呼ばれ方:
+#   stdin に JSON が渡されてくる。例:
+#     {
+#       "hook_event_name": "PostToolUse",
+#       "tool_name": "snowflake_sql_execute",
+#       "tool_input": { "sql": "SELECT * FROM ...", "description": "..." }
+#     }
 #
-# 出力:
-#   常に exit 0
-#   stdout には何も返さない（PostToolUse は decision を要求しない）
-# ----------------------------------------------------------------------
-set -u
+#   PostToolUse はブロックできないので、常に exit 0 で返す。
+# =============================================================================
 
+# stdin (JSON) を変数に読み込む
+INPUT="$(cat)"
+
+# JSON から tool_name と sql と description を取り出す
+TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // ""')
+SQL=$(echo "$INPUT" | jq -r '.tool_input.sql // ""')
+DESC=$(echo "$INPUT" | jq -r '.tool_input.description // ""')
+
+# このフックは SQL 実行ツールのみ対象。それ以外は何もせず終了
+if [[ "$TOOL_NAME" != *sql* && "$TOOL_NAME" != *snowflake* ]]; then
+  exit 0
+fi
+
+# ログ出力先 (プロジェクトルートからの相対)
 LOG_DIR="${CORTEX_PROJECT_DIR:-.}/.cortex/logs"
 LOG_FILE="${LOG_DIR}/sql_audit.log"
 
-mkdir -p "$LOG_DIR" 2>/dev/null || true
+# ディレクトリが無ければ作る
+mkdir -p "$LOG_DIR"
 
-INPUT="$(cat)"
-
-extract_field() {
-  local path="$1"
-  if command -v jq >/dev/null 2>&1; then
-    printf '%s' "$INPUT" | jq -r "$path // \"\""
-  elif command -v python3 >/dev/null 2>&1; then
-    printf '%s' "$INPUT" | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    keys = '$path'.replace('.tool_input.','').replace('.tool_name','tool_name').split('.')
-    cur = d
-    for k in keys:
-        if not k: continue
-        cur = cur.get(k, '') if isinstance(cur, dict) else ''
-    print(cur if isinstance(cur, str) else str(cur))
-except Exception:
-    print('')
-"
-  fi
-}
-
-SQL=$(extract_field '.tool_input.sql')
-DESC=$(extract_field '.tool_input.description')
-TS=$(date '+%Y-%m-%dT%H:%M:%S%z')
-
-# ログ追記（フォーマット: ISO8601 | description | sql 1行化）
+# ログに 1 件追記 (ISO8601タイムスタンプ + description + 実行SQL)
 {
-  printf '[%s] desc=%q\n' "$TS" "${DESC:-}"
-  printf '       sql=%s\n' "$(printf '%s' "${SQL:-}" | tr '\n' ' ' | tr -s ' ')"
-  printf '\n'
-} >> "$LOG_FILE" 2>/dev/null || true
+  echo "[$(date '+%Y-%m-%dT%H:%M:%S%z')] $DESC"
+  echo "  SQL: $SQL"
+  echo ""
+} >> "$LOG_FILE"
 
 # PostToolUse はブロック不可なので必ず exit 0
 exit 0
