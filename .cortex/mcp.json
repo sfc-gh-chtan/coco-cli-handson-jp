@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "drawio-app": {
-      "type": "sse",
-      "url": "https://mcp.draw.io/mcp"
+    "drawio": {
+      "command": "npx",
+      "args": ["-y", "@drawio/mcp"]
     }
   }
 }
