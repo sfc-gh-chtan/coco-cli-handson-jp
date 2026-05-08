@@ -37,13 +37,12 @@ cortex --version
 ```
 cortex
 
-cortex -w <作業ディレクトリ>
+cortex -c <接続名> -w <作業ディレクトリ>
 ```
 
-- 0-5. Cortex Code CLI から Snowflake CLI による SQL ファイル実行
+- 0-5. SQL ファイル実行
 ```
-/sh
-snow sql -f setup.sql
+@setup.sql を実行して
 ```
 
 ## Step 1: データ探索
@@ -91,7 +90,7 @@ SNOWRETAIL_DB.SNOWRETAIL_SCHEMA のデータ構造の問題点は何か、改善
 
 - 2-1. Dynamic Table作成計画の立案
 ```
-MART_SALESという名前でDynamic Tableを作成したい。まずは計画を立てて。
+MART_SALES という名前で Dynamic Table を作成したい。まずは計画を立てて。
 ```
 
 - 2-2. 計画の確認、修正、実行
@@ -127,14 +126,19 @@ AGENTS.mdの Before/After 比較でソフトガバナンスの効果を体感す
 チャネル別、カテゴリ別のクロス集計を出して
 ```
 
-- 3-2. AGENTS.mdの配置と内容確認
+- 3-2. 新しいセッションを作成（文脈をリセット）
 ```
-AGENTS.mdを読んで、どんなルールが定義されているか説明して
+/new
 ```
 
-- 3-3. After（AGENTS.mdあり）の動作確認
+- 3-3. AGENTS.mdの配置と内容確認
 ```
-チャネル別、カテゴリ別のクロス集計を出して
+@samples/AGENTS.md を読んで、どんなルールが定義されているか説明して
+```
+
+- 3-4. After（AGENTS.mdあり）の動作確認
+```
+@samples/AGENTS.md を読んで、チャネル別、カテゴリ別のクロス集計を出して
 ```
 
 ---
