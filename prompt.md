@@ -352,7 +352,7 @@ MART_SALESの最新データで月次売上分析レポートを作成して
 
 - 8-1. ベースラインの確認
 ```
-streamlit_app.py を読んで、現状何が表示されるか説明して
+@steps/streamlit/streamlit_app.py を読んで、現状何が表示されるか説明して
 ```
 
 - 8-2. CoCoで改修
@@ -365,7 +365,7 @@ streamlit_app.py を読んで、現状何が表示されるか説明して
 
 - 8-3. Snowflakeへのデプロイ
 ```
-steps/streamlit にある snowflake.yml を使って Streamlit をデプロイしてください。environment.yml の plotly 依存も含めてください。
+@steps/streamlit にある snowflake.yml を使って Streamlit をデプロイしてください。environment.yml の plotly 依存も含めてください。また実際の MART_SALES のテーブル構造に従ってコードを修正してください。
 ```
 
 - 8-4. デプロイ後の追加カスタマイズ（余力がある場合）
