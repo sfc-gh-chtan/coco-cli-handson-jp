@@ -14,4 +14,4 @@ GRANT USAGE ON INTEGRATION git_api_coco_hands_on_integration TO ROLE <Cortex Cod
 
 GRANT CREATE DATABASE ON ACCOUNT TO ROLE <Cortex Codeハンズオン参加者ロール>;
 
-GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE <Cortex Codeハンズオン参加者ロール>;
+--GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE <Cortex Codeハンズオン参加者ロール>;
