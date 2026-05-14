@@ -1,5 +1,7 @@
 USE ROLE ACCOUNTADMIN;
 
+-- ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';
+
 -- Git連携のため、API統合を作成する
 CREATE OR REPLACE API INTEGRATION git_api_coco_hands_on_integration
   API_PROVIDER = git_https_api
@@ -13,5 +15,7 @@ CREATE OR REPLACE API INTEGRATION git_api_coco_hands_on_integration
 GRANT USAGE ON INTEGRATION git_api_coco_hands_on_integration TO ROLE <Cortex Codeハンズオン参加者ロール>;
 
 GRANT CREATE DATABASE ON ACCOUNT TO ROLE <Cortex Codeハンズオン参加者ロール>;
+
+GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE <Cortex Codeハンズオン参加者ロール>;
 
 --GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE <Cortex Codeハンズオン参加者ロール>;
