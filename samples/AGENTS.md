@@ -2,8 +2,9 @@
 
 ## プロジェクト概要
 
-EC（オンライン）と実店舗（リテール）の両チャネルを持つ GlacierStyle のデータ分析プロジェクト。
-データベース: `SNOWRETAIL_DB`、スキーマ: `SNOWRETAIL_SCHEMA`
+EC（オンライン）と実店舗（リテール）の両チャネルを持つ SnowRetail のデータ分析プロジェクト。
+
+データベース: `SNOWRETAIL_DB`にCurrentユーザ名を連結、スキーマ: `SNOWRETAIL_SCHEMA`
 
 ## ビジネス定義
 
@@ -42,4 +43,4 @@ EC（オンライン）と実店舗（リテール）の両チャネルを持つ
 
 ## ウェアハウス
 
-- 分析クエリには `COMPUTE_WH` を使用すること
+- 分析クエリには `COCO_CLI_HANDSON_WH` を使用すること
