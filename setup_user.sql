@@ -1,5 +1,7 @@
 -- ロールの指定
-USE ROLE <Cortex Codeハンズオン参加者ロール>;
+USE ROLE COCO_CLI_HANDSON_ROLE;
+
+USE WAREHOUSE COCO_CLI_HANDSON_WH;
 
 -- ユーザ名を動的に取得してデータベース名を設定
 SET DB_NAME = 'SNOWRETAIL_DB_' || CURRENT_USER();
