@@ -1,0 +1,38 @@
+{
+  "$schema": "https://docs.snowflake.com/cortex-code/settings.schema.json",
+  "_comment": "SnowRetail ハンズオン用 Hooks サンプル。AGENTS.md (ソフトガバナンス) を補完するハードガバナンス層。matcher は全ツール (*) を対象にし、スクリプト側で tool_name を見て分岐する (CoCo CLI のツール名は小文字で渡る場合があるため)。",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .cortex/hooks/block_dangerous_sql.sh",
+            "timeout": 30,
+            "enabled": true
+          },
+          {
+            "type": "command",
+            "command": "bash .cortex/hooks/block_dangerous_bash.sh",
+            "timeout": 30,
+            "enabled": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .cortex/hooks/log_sql.sh",
+            "timeout": 15,
+            "enabled": true
+          }
+        ]
+      }
+    ]
+  }
+}
