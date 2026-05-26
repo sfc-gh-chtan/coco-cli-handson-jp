@@ -32,7 +32,7 @@ CREATE OR REPLACE GIT REPOSITORY GIT_INTEGRATION_FOR_COCO_CLI_HANDSON
 ls @GIT_INTEGRATION_FOR_COCO_CLI_HANDSON/branches/main;
 
 -- Githubからファイルを持ってくる
-COPY FILES INTO @IDENTIFIER($STAGE_NAME) FROM @GIT_INTEGRATION_FOR_COCO_CLI_HANDSON/branches/main/data/ PATTERN ='.*\\.csv$';
+COPY FILES INTO @FILE FROM @GIT_INTEGRATION_FOR_COCO_CLI_HANDSON/branches/main/data/ PATTERN ='.*\\.csv$';
 
 -- ============================================================
 -- 1. データの準備
