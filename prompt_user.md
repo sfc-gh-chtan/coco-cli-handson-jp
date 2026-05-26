@@ -94,15 +94,9 @@ MART_SALES という名前で Dynamic Table を作成したい。まずは計画
 
 - 2-2. 計画の確認、修正、実行
 ```
-EC_DATA, RETAIL_DATA, PRODUCT_MASTER を使って
-```
-```
-商品名から類推してカテゴリ、ブランドのカラムを追加して
-```
-```
-TARGET_LAGを1日にして
-```
-```
+EC_DATA, RETAIL_DATA, PRODUCT_MASTER を使って、
+商品名から類推してカテゴリ、ブランドのカラムを追加して、
+TARGET_LAGを1日にして、
 カテゴリマスタテーブルも作って、カテゴリデータを生成して
 ```
 
