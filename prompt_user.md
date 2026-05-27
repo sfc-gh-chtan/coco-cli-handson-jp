@@ -411,3 +411,8 @@ MART_SALESの最新データで月次売上分析レポートを作成しHTMLで
 今まで実施してきたテーブル、ダイナミックテーブル、Cortex Search、Cortex Agent、Streamlitなどの仕様をHTMLベースの仕様書としてまとめて、
 かつオブジェクト種類ごとにタブで分けてください。
 ```
+- 9-2. スクリプトを作成
+```
+今まで作成したテーブル、ダイナミックテーブル、Cortex Search、Cortex Agent、Streamlitなど、および利用したロール、付与した権限
+を環境構築可能なScript化してください。
+```
