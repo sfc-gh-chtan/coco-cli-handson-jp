@@ -413,6 +413,6 @@ MART_SALESの最新データで月次売上分析レポートを作成しHTMLで
 ```
 - 9-2. スクリプトを作成
 ```
-今まで作成したテーブル、ダイナミックテーブル、Cortex Search、Cortex Agent、Streamlitなど、および利用したロール、付与した権限
+/dcm 今まで作成したテーブル、ダイナミックテーブル、Cortex Search、Cortex Agent、Streamlitなど、および利用したロール、付与した権限
 を環境構築可能なScript化してください。
 ```
