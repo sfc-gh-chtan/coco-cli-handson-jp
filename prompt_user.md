@@ -40,7 +40,7 @@ cortex -c <接続名> -w <作業ディレクトリ>
 
 - 0-5. SQL ファイル実行
 ```
-@setup.sql を実行して、
+@setup_user.sql を実行して、
 ```
 
 ## Step 1: データ探索
